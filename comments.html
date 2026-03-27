@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Comment Section with User Info</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .comment-box {
+      margin-bottom: 20px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+    textarea {
+      height: 80px;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .comments {
+      margin-top: 20px;
+    }
+    .comment {
+      border-bottom: 1px solid #ccc;
+      padding: 10px 0;
+    }
+    .comment strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .email {
+      font-size: 0.9em;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Leave a Comment</h2>
+  <div class="comment-box">
+    <form id="commentForm">
+      <input type="text" id="nameInput" placeholder="Your Name" required><br>
+      <input type="email" id="emailInput" placeholder="Your Gmail" required><br>
+      <textarea id="commentInput" placeholder="Write your comment here..." required></textarea><br>
+      <button type="submit">Post Comment</button>
+    </form>
+  </div>
+
+  <div class="comments" id="commentsSection">
+    <h3>Comments:</h3>
+  </div>
+
+  <script>
+    const form = document.getElementById('commentForm');
+    const nameInput = document.getElementById('nameInput');
+    const emailInput = document.getElementById('emailInput');
+    const commentInput = document.getElementById('commentInput');
+    const commentsSection = document.getElementById('commentsSection');
+
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const name = nameInput.value.trim();
+      const email = emailInput.value.trim();
+      const commentText = commentInput.value.trim();
+
+      if (name !== "" && email !== "" && commentText !== "") {
+        const newComment = document.createElement('div');
+        newComment.classList.add('comment');
+
+        newComment.innerHTML = `
+          <strong>${name}</strong>
+          <span class="email">${email}</span>
+          <p>${commentText}</p>
+        `;
+
+        commentsSection.appendChild(newComment);
+
+        // Clear inputs
+        nameInput.value = "";
+        emailInput.value = "";
+        commentInput.value = "";
+      }
+    });
+  </script>
+
+</body>
+</html>
