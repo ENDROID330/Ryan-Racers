@@ -48,6 +48,24 @@
       font-weight: bold;
       color: #28a745;
     }
+    .actions {
+      margin-top: 10px;
+    }
+    .actions button {
+      margin-right: 10px;
+      padding: 6px 12px;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+    .edit-btn {
+      background-color: #ffc107;
+      color: black;
+    }
   </style>
 </head>
 <body>
@@ -56,19 +74,54 @@
 
   <script>
     const adsList = document.getElementById('adsList');
-    const ads = JSON.parse(localStorage.getItem('carAds')) || [];
+    let ads = JSON.parse(localStorage.getItem('carAds')) || [];
 
-    ads.forEach(ad => {
-      const adDiv = document.createElement('div');
-      adDiv.classList.add('ad-card');
-      adDiv.innerHTML = `
-        <h3>${ad.title}</h3>
-        <p class="price">$${ad.price}</p>
-        <p>${ad.description}</p>
-        <img src="${ad.image}" alt="Car Image">
-      `;
-      adsList.appendChild(adDiv);
-    });
+    function renderAds() {
+      adsList.innerHTML = "";
+      ads.forEach((ad, index) => {
+        const adDiv = document.createElement('div');
+        adDiv.classList.add('ad-card');
+        adDiv.innerHTML = `
+          <h3>${ad.title}</h3>
+          <p class="price">$${ad.price}</p>
+          <p>${ad.description}</p>
+          <img src="${ad.image}" alt="Car Image">
+          <div class="actions">
+            <button class="edit-btn" onclick="editAd(${index})">Edit</button>
+            <button class="delete-btn" onclick="deleteAd(${index})">Delete</button>
+          </div>
+        `;
+        adsList.appendChild(adDiv);
+      });
+    }
+
+    function deleteAd(index) {
+      ads.splice(index, 1);
+      localStorage.setItem('carAds', JSON.stringify(ads));
+      renderAds();
+    }
+
+    function editAd(index) {
+      const ad = ads[index];
+      const newTitle = prompt("Edit Title:", ad.title);
+      const newPrice = prompt("Edit Price:", ad.price);
+      const newDescription = prompt("Edit Description:", ad.description);
+      const newImage = prompt("Edit Image URL:", ad.image);
+
+      if (newTitle && newPrice && newDescription && newImage) {
+        ads[index] = {
+          title: newTitle,
+          price: newPrice,
+          description: newDescription,
+          image: newImage
+        };
+        localStorage.setItem('carAds', JSON.stringify(ads));
+        renderAds();
+      }
+    }
+
+    // Initial render
+    renderAds();
   </script>
 </body>
 </html>
