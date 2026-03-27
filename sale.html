@@ -5,7 +5,7 @@
   <title>Upload Car Ad</title>
 </head>
 <body>
-  <h2>Upload Your Car Ad</h2>
+  <h2 id="formTitle">Upload Your Car Ad</h2>
   <form id="carForm">
     <label>Car Title</label>
     <input type="text" id="title" required><br><br>
@@ -17,41 +17,88 @@
     <textarea id="description" required></textarea><br><br>
 
     <label>Upload Image</label>
-    <input type="file" id="image" accept="image/*" required><br><br>
-<label>contact</label>
-    <textarea id="number" required></textarea><br><br>
-    <button type="submit">Submit Ad</button>
+    <input type="file" id="image" accept="image/*"><br><br>
+
+    <button type="submit">Save Ad</button>
   </form>
 
   <script>
     const form = document.getElementById('carForm');
+    const titleInput = document.getElementById('title');
+    const priceInput = document.getElementById('price');
+    const descriptionInput = document.getElementById('description');
+    const imageInput = document.getElementById('image');
+    const formTitle = document.getElementById('formTitle');
+
+    let ads = JSON.parse(localStorage.getItem('carAds')) || [];
+
+    // Check if editing
+    const urlParams = new URLSearchParams(window.location.search);
+    const editIndex = urlParams.get('edit');
+
+    if (editIndex !== null) {
+      const ad = ads[editIndex];
+      if (ad) {
+        formTitle.textContent = "Edit Your Car Ad";
+        titleInput.value = ad.title;
+        priceInput.value = ad.price;
+        descriptionInput.value = ad.description;
+        // Image preview not shown here, but you could add it
+      }
+    }
 
     form.addEventListener('submit', function(e) {
       e.preventDefault();
 
-      const title = document.getElementById('title').value;
-      const price = document.getElementById('price').value;
-      const description = document.getElementById('description').value;
-      const image = document.getElementById('image').files[0];
+      const title = titleInput.value;
+      const price = priceInput.value;
+      const description = descriptionInput.value;
+      const imageFile = imageInput.files[0];
 
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        const ad = {
-          title: title,
-          price: price,
-          description: description,
-          image: event.target.result
+      if (editIndex !== null) {
+        // Editing existing ad
+        if (imageFile) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            ads[editIndex] = {
+              ...ads[editIndex],
+              title,
+              price,
+              description,
+              image: event.target.result
+            };
+            localStorage.setItem('carAds', JSON.stringify(ads));
+            window.location.href = "ads.html";
+          };
+          reader.readAsDataURL(imageFile);
+        } else {
+          // Keep old image if not changed
+          ads[editIndex] = {
+            ...ads[editIndex],
+            title,
+            price,
+            description
+          };
+          localStorage.setItem('carAds', JSON.stringify(ads));
+          window.location.href = "ads.html";
+        }
+      } else {
+        // Creating new ad
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const ad = {
+            title,
+            price,
+            description,
+            image: event.target.result,
+            uploader: "user@gmail.com" // Replace with actual logged-in user
+          };
+          ads.push(ad);
+          localStorage.setItem('carAds', JSON.stringify(ads));
+          window.location.href = "ads.html";
         };
-
-        // Save ad to localStorage
-        let ads = JSON.parse(localStorage.getItem('carAds')) || [];
-        ads.push(ad);
-        localStorage.setItem('carAds', JSON.stringify(ads));
-
-        // Redirect to ads page
-        window.location.href = "ads.html";
-      };
-      reader.readAsDataURL(image);
+        reader.readAsDataURL(imageFile);
+      }
     });
   </script>
 </body>
