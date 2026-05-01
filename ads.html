@@ -3,6 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <title>Car Ads</title>
+  <!DOCTYPE html>
+<html>
+<head>
+  <title>Cars Heritage Ads</title>
+  <!-- Load ads.js as a module -->
+  <script type="module" src="ads.js"></script>
+
+  
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -74,6 +82,32 @@
 </head>
 <body>
   <h2>Car Ads</h2>
+  
+  <h1>Ryan Racers Ads</h1>
+
+  <!-- Authentication UI -->
+  <div>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="signUp()">Sign Up</button>
+    <button onclick="signIn()">Sign In</button>
+    <button onclick="logOut()">Log Out</button>
+  </div>
+
+  <!-- Ad Posting Form (hidden until login) -->
+  <div id="adForm" style="display:none;">
+    <input id="title" type="text" placeholder="Ad Title">
+    <input id="description" type="text" placeholder="Ad Description">
+    <button onclick="postAd()">Post Ad</button>
+  </div>
+
+  <!-- Ads List -->
+  <div id="ads"></div>
+
+
+  
+  
+  
   <div id="adsList"></div>
 <script src="ads.js"></script>
   <script>
