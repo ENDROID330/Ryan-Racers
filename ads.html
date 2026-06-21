@@ -12,51 +12,16 @@
       margin: 0;
       padding: 0;
     }
-
     header {
       padding: 20px;
       background-color: rgba(0,0,0,0.6);
     }
-
     .logo {
       font-size: 40px;
       font-weight: bold;
       color: gold;
       text-shadow: 2px 2px 8px black;
     }
-
-    .container {
-      margin: 40px auto;
-      width: 80%;
-      background: rgba(255,255,255,0.1);
-      padding: 20px;
-      border-radius: 10px;
-    }
-
-    input, button {
-      padding: 10px;
-      margin: 10px;
-      border-radius: 5px;
-      border: none;
-    }
-
-    button {
-      background-color: gold;
-      color: black;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: orange;
-    }
-
-    .result {
-      margin-top: 20px;
-      font-size: 18px;
-      color: lightgreen;
-    }
-
     .ad-card {
       background: rgba(255,255,255,0.1);
       margin: 20px;
@@ -64,7 +29,6 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
-
     .ad-card img {
       max-width: 300px;
       border-radius: 6px;
@@ -77,6 +41,7 @@
     <h2>Car Ads</h2>
     <button onclick="showAllAds()">All Ads</button>
     <button onclick="showMyAds()">My Ads</button>
+    <p><a href="post.html" style="color:lightgreen;">← Back to Post Page</a></p>
   </header>
 
   <div id="adsList"></div>
@@ -84,9 +49,7 @@
   <script>
     const adsList = document.getElementById('adsList');
     const ads = JSON.parse(localStorage.getItem('carAds')) || [];
-
-    // Assume each ad has a "user" field storing uploader name/email
-    const currentUser = "Ryan"; // Replace with dynamic user identity
+    const currentUser = "Ryan"; // Replace with login system
 
     function renderAds(filteredAds) {
       adsList.innerHTML = "";
@@ -95,9 +58,11 @@
         adDiv.classList.add('ad-card');
         adDiv.innerHTML = `
           <h3>${ad.title}</h3>
+          <p><strong>Model:</strong> ${ad.model}</p>
           <p><strong>Price:</strong> $${ad.price}</p>
           <p>${ad.description}</p>
           <img src="${ad.image}" alt="Car Image">
+          <p><em>Uploaded by: ${ad.user}</em></p>
         `;
         adsList.appendChild(adDiv);
       });
