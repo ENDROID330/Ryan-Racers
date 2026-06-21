@@ -1,228 +1,81 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Car Ads</title>
-   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-      color: white;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
+const adsList = document.getElementById('adsList');
+let ads = JSON.parse(localStorage.getItem('carAds')) || [];
 
-    header {
-      padding: 20px;
-      background-color: rgba(0,0,0,0.6);
-    }
+// Simulate current logged-in user Gmail
+const currentUserEmail = "user@gmail.com"; // Replace with actual login system
 
-    .logo {
-      font-size: 40px;
-      font-weight: bold;
-      color: gold;
-      text-shadow: 2px 2px 8px black;
-    }
+// Conversion rate (USD → PKR)
+const conversionRate = 278;
 
-    .container {
-      margin: 40px auto;
-      width: 80%;
-      background: rgba(255,255,255,0.1);
-      padding: 20px;
-      border-radius: 10px;
-    }
+function renderAds() {
+  adsList.innerHTML = "";
+  ads.forEach((ad, index) => {
+    const pricePKR = ad.price * conversionRate;
 
-    input, button {
-      padding: 10px;
-      margin: 10px;
-      border-radius: 5px;
-      border: none;
-    }
+    const adDiv = document.createElement('div');
+    adDiv.classList.add('ad-card');
+    adDiv.innerHTML = `
+      <h3>${ad.title}</h3>
+      <p><strong>Model:</strong> ${ad.model || "N/A"}</p>
+      <p><strong>Mileage:</strong> ${ad.mileage || "N/A"} km/l</p>
+      <p><strong>Distance Driven:</strong> ${ad.distance || "N/A"} km</p>
+      <p><strong>Phone:</strong> ${ad.phone || "N/A"}</p>
+      <p class="price">Price: ${pricePKR.toLocaleString()} PKR</p>
+      <p>${ad.description}</p>
+      <img src="${ad.image}" alt="Car Image">
+      <p class="uploader">Uploaded by: ${ad.uploader}</p>
+      <div class="actions">
+        ${ad.uploader === currentUserEmail ? `
+          <button class="edit-btn" onclick="editAd(${index})">Edit</button>
+          <button class="delete-btn" onclick="deleteAd(${index})">Delete</button>
+        ` : `<em>You cannot edit/delete this ad</em>`}
+      </div>
+    `;
+    adsList.appendChild(adDiv);
+  });
+}
 
-    button {
-      background-color: gold;
-      color: black;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: orange;
-    }
-
-    .result {
-      margin-top: 20px;
-      font-size: 18px;
-      color: lightgreen;
-    }
-  </style>
-  <!DOCTYPE html>
-<html>
-<head>
-  <title>Cars Heritage Ads</title>
-  <!-- Load ads.js as a module -->
-  <script type="module" src="ads.js"></script>
-
-  
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f9;
-      margin: 0;
-      padding: 20px;
-    }
-    h2 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 30px;
-    }
-    #adsList {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-    }
-    .ad-card {
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      padding: 15px;
-      transition: transform 0.2s ease;
-    }
-    .ad-card:hover {
-      transform: translateY(-5px);
-    }
-    .ad-card h3 {
-      margin-top: 0;
-      color: #007bff;
-    }
-    .ad-card p {
-      margin: 5px 0;
-      color: #555;
-    }
-    .ad-card img {
-      max-width: 100%;
-      border-radius: 6px;
-      margin-top: 10px;
-    }
-    .price {
-      font-size: 18px;
-      font-weight: bold;
-      color: #28a745;
-    }
-    .uploader {
-      font-size: 0.9em;
-      color: #666;
-    }
-    .actions {
-      margin-top: 10px;
-    }
-    .actions button {
-      margin-right: 10px;
-      padding: 6px 12px;
-      border: none;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    .delete-btn {
-      background-color: #dc3545;
-      color: white;
-    }
-    .edit-btn {
-      background-color: #ffc107;
-      color: black;
-    }
-  </style>
-</head>
-<body>
-  <h2>Car Ads</h2>
-  
-  <h1>Ryan Racers Ads</h1>
-
-  <!-- Authentication UI -->
-  
-
-  <!-- Ad Posting Form (hidden until login) -->
-  <div id="adForm" style="display:none;">
-    <input id="title" type="text" placeholder="Ad Title">
-    <input id="description" type="text" placeholder="Ad Description">
-    <button onclick="postAd()">Post Ad</button>
-  </div>
-
-  <!-- Ads List -->
-  <div id="ads"></div>
-
-
-  
-  
-  
-  <div id="adsList"></div>
-<script src="ads.js"></script>
-  <script>
-    const adsList = document.getElementById('adsList');
-    let ads = JSON.parse(localStorage.getItem('carAds')) || [];
-
-    // Simulate current logged-in user Gmail
-    const currentUserEmail = "user@gmail.com"; // Replace with actual login system
-
-    function renderAds() {
-      adsList.innerHTML = "";
-      ads.forEach((ad, index) => {
-        const adDiv = document.createElement('div');
-        adDiv.classList.add('ad-card');
-        adDiv.innerHTML = `
-          <h3>${ad.title}</h3>
-          <p class="price">$${ad.price}</p>
-          <p>${ad.description}</p>
-          <img src="${ad.image}" alt="Car Image">
-          <p class="uploader">Uploaded by: ${ad.uploader}</p>
-          <div class="actions">
-            ${ad.uploader === currentUserEmail ? `
-              <button class="edit-btn" onclick="editAd(${index})">Edit</button>
-              <button class="delete-btn" onclick="deleteAd(${index})">Delete</button>
-            ` : `<em>You cannot edit/delete this ad</em>`}
-          </div>
-        `;
-        adsList.appendChild(adDiv);
-      });
-    }
-
-    function deleteAd(index) {
-      if (ads[index].uploader === currentUserEmail) {
-        ads.splice(index, 1);
-        localStorage.setItem('carAds', JSON.stringify(ads));
-        renderAds();
-      } else {
-        alert("You can only delete your own ads.");
-      }
-    }
-
-    function editAd(index) {
-      if (ads[index].uploader === currentUserEmail) {
-        const ad = ads[index];
-        const newTitle = prompt("Edit Title:", ad.title);
-        const newPrice = prompt("Edit Price:", ad.price);
-        const newDescription = prompt("Edit Description:", ad.description);
-        const newImage = prompt("Edit Image URL:", ad.image);
-
-        if (newTitle && newPrice && newDescription && newImage) {
-          ads[index] = {
-            title: newTitle,
-            price: newPrice,
-            description: newDescription,
-            image: newImage,
-            uploader: ad.uploader // keep uploader unchanged
-          };
-          localStorage.setItem('carAds', JSON.stringify(ads));
-          renderAds();
-        }
-      } else {
-        alert("You can only edit your own ads.");
-      }
-    }
-
-    // Initial render
+function deleteAd(index) {
+  if (ads[index].uploader === currentUserEmail) {
+    ads.splice(index, 1);
+    localStorage.setItem('carAds', JSON.stringify(ads));
     renderAds();
-  </script>
-</body>
-</html>
+  } else {
+    alert("You can only delete your own ads.");
+  }
+}
+
+function editAd(index) {
+  if (ads[index].uploader === currentUserEmail) {
+    const ad = ads[index];
+    const newTitle = prompt("Edit Title:", ad.title);
+    const newModel = prompt("Edit Model:", ad.model);
+    const newMileage = prompt("Edit Mileage:", ad.mileage);
+    const newDistance = prompt("Edit Distance Driven:", ad.distance);
+    const newPhone = prompt("Edit Phone:", ad.phone);
+    const newPrice = prompt("Edit Price (USD):", ad.price);
+    const newDescription = prompt("Edit Description:", ad.description);
+    const newImage = prompt("Edit Image URL:", ad.image);
+
+    if (newTitle && newPrice && newDescription && newImage) {
+      ads[index] = {
+        title: newTitle,
+        model: newModel,
+        mileage: newMileage,
+        distance: newDistance,
+        phone: newPhone,
+        price: parseFloat(newPrice),
+        description: newDescription,
+        image: newImage,
+        uploader: ad.uploader // keep uploader unchanged
+      };
+      localStorage.setItem('carAds', JSON.stringify(ads));
+      renderAds();
+    }
+  } else {
+    alert("You can only edit your own ads.");
+  }
+}
+
+// Initial render
+renderAds();
