@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-   <style>
+  <title>Car Ads</title>
+  <style>
     body {
       font-family: Arial, sans-serif;
       background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
@@ -55,28 +56,64 @@
       font-size: 18px;
       color: lightgreen;
     }
+
+    .ad-card {
+      background: rgba(255,255,255,0.1);
+      margin: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    .ad-card img {
+      max-width: 300px;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
   </style>
-  <title>Car Ads</title>
 </head>
 <body>
-  <h2>Car Ads</h2>
+  <header>
+    <h2>Car Ads</h2>
+    <button onclick="showAllAds()">All Ads</button>
+    <button onclick="showMyAds()">My Ads</button>
+  </header>
+
   <div id="adsList"></div>
 
   <script>
     const adsList = document.getElementById('adsList');
     const ads = JSON.parse(localStorage.getItem('carAds')) || [];
 
-    ads.forEach(ad => {
-      const adDiv = document.createElement('div');
-      adDiv.innerHTML = `
-        <h3>${ad.title}</h3>
-        <p><strong>Price:</strong> $${ad.price}</p>
-        <p>${ad.description}</p>
-        <img src="${ad.image}" alt="Car Image" style="max-width:300px;">
-        <hr>
-      `;
-      adsList.appendChild(adDiv);
-    });
+    // Assume each ad has a "user" field storing uploader name/email
+    const currentUser = "Ryan"; // Replace with dynamic user identity
+
+    function renderAds(filteredAds) {
+      adsList.innerHTML = "";
+      filteredAds.forEach(ad => {
+        const adDiv = document.createElement('div');
+        adDiv.classList.add('ad-card');
+        adDiv.innerHTML = `
+          <h3>${ad.title}</h3>
+          <p><strong>Price:</strong> $${ad.price}</p>
+          <p>${ad.description}</p>
+          <img src="${ad.image}" alt="Car Image">
+        `;
+        adsList.appendChild(adDiv);
+      });
+    }
+
+    function showAllAds() {
+      renderAds(ads);
+    }
+
+    function showMyAds() {
+      const myAds = ads.filter(ad => ad.user === currentUser);
+      renderAds(myAds);
+    }
+
+    // Default: show all ads
+    showAllAds();
   </script>
 </body>
 </html>
