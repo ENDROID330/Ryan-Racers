@@ -75,10 +75,10 @@
 
   <div class="container">
     <h3>Post a New Advertisement</h3>
-    <input type="text" id="titleInput" placeholder="Car Title">
-    <input type="number" id="priceInput" placeholder="Price">
-    <input type="text" id="descInput" placeholder="Description">
-    <input type="file" id="imageUpload" accept="image/*">
+    <input type="text" id="titleInput" placeholder="Car Title" required>
+    <input type="number" id="priceInput" placeholder="Price" required>
+    <input type="text" id="descInput" placeholder="Description" required>
+    <input type="file" id="imageUpload" accept="image/*" required>
     <span class="warning-text">* Please use images under 500KB (Firestore string limit)</span>
     <button onclick="addAd()">Add Ad</button>
   </div>
@@ -88,6 +88,7 @@
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCdyIRlXiVEib0zHBtFuhRppHgRgrrBO5E",
       authDomain: "car-market-9e934.firebaseapp.com",
@@ -102,65 +103,76 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let currentUser = "Guest";
+    let currentUser = null;
 
+    // Secure the Route: Redirect unauthenticated users immediately
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user.email || user.uid;
       } else {
-        currentUser = "Guest";
+        alert("Please login to access the dashboard.");
+        window.location.href = "login.html"; // <-- Change this to your login file (e.g., index.html)
       }
     });
 
+    // Post Advertisement
     window.addAd = async function() {
-      const title = document.getElementById("titleInput").value;
-      const price = document.getElementById("priceInput").value;
-      const desc = document.getElementById("descInput").value;
+      const title = document.getElementById("titleInput").value.trim();
+      const price = document.getElementById("priceInput").value.trim();
+      const desc = document.getElementById("descInput").value.trim();
       const fileInput = document.getElementById("imageUpload");
       const file = fileInput.files[0];
 
-      if (title && price && desc && file) {
-        if (file.size > 512000) { 
-          alert("Image is too large! Please choose an image smaller than 500KB.");
-          return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-          try {
-            const newAd = {
-              title: title,
-              price: price,
-              description: desc,
-              image: e.target.result, 
-              user: currentUser
-            };
-            
-            await addDoc(collection(db, "carAds"), newAd);
-            
-            document.getElementById("titleInput").value = "";
-            document.getElementById("priceInput").value = "";
-            document.getElementById("descInput").value = "";
-            document.getElementById("imageUpload").value = "";
-            
-            alert("Ad posted successfully! View it on the Ads page.");
-          } catch (error) {
-            console.error("Error writing to Firestore: ", error);
-            alert("Failed to save ad.");
-          }
-        };
-        reader.readAsDataURL(file);
-      } else {
+      if (!title || !price || !desc || !file) {
         alert("Please fill all fields and upload an image.");
+        return;
       }
-    }
 
+      if (file.size > 512000) { 
+        alert("Image is too large! Please choose an image smaller than 500KB.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const newAd = {
+            title: title,
+            price: Number(price), // Converted to Number for logical sorting capabilities later
+            description: desc,
+            image: e.target.result, 
+            user: currentUser,
+            createdAt: new Date() // Useful for sorting items from newest to oldest
+          };
+          
+          await addDoc(collection(db, "carAds"), newAd);
+          
+          // Clear inputs safely
+          document.getElementById("titleInput").value = "";
+          document.getElementById("priceInput").value = "";
+          document.getElementById("descInput").value = "";
+          fileInput.value = "";
+          
+          alert("Ad posted successfully! View it on the Ads page.");
+        } catch (error) {
+          console.error("Error writing to Firestore: ", error);
+          alert("Failed to save ad. Check your Firestore rules permissions.");
+        }
+      };
+      
+      reader.readAsDataURL(file);
+    };
+
+    // Logout handling with route redirection
     document.getElementById("logoutBtn").addEventListener("click", () => {
-      signOut(auth).then(() => {
-        alert("Logged out!");
-      }).catch((error) => {
-        console.error("Logout issue: ", error);
-      });
+      signOut(auth)
+        .then(() => {
+          alert("Logged out successfully!");
+          window.location.href = "login.html"; // <-- Redirect route on sign out
+        })
+        .catch((error) => {
+          console.error("Logout issue: ", error);
+        });
     });
   </script>
 </body>
