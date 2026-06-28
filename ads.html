@@ -2,66 +2,80 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Car Ads</title>
+  <title>Car Ads - Marketplace</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      background: #0f2027;
       color: white;
-      text-align: center;
       margin: 0;
-      padding: 0;
+      padding: 20px;
     }
     header {
-      padding: 20px;
-      background-color: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
-    .logo {
-      font-size: 40px;
-      font-weight: bold;
-      color: gold;
-      text-shadow: 2px 2px 8px black;
-    }
-    button {
-      padding: 10px;
-      margin: 10px;
-      border-radius: 5px;
-      border: none;
+    .btn {
       background-color: gold;
       color: black;
       font-weight: bold;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
       cursor: pointer;
+      text-decoration: none;
     }
-    button:hover {
-      background-color: orange;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
     }
-    .ad-card {
-      background: rgba(255,255,255,0.1);
-      margin: 20px;
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover; /* Keeps image proportions clean without stretching */
+      background-color: #203a43;
+    }
+    .card-content {
       padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      text-align: left;
     }
-    .ad-card img {
-      max-width: 300px;
-      border-radius: 6px;
-      margin-top: 10px;
+    .price {
+      color: gold;
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+    .user-tag {
+      font-size: 11px;
+      color: #aaa;
     }
   </style>
 </head>
 <body>
+
   <header>
-    <h2>Car Ads</h2>
-    <button onclick="showAllAds()">All Ads</button>
-    <button onclick="showMyAds()">My Ads</button>
-    <p><a href="sale2.html" style="color:lightgreen;">← Sell Your Car</a></p>
+    <h2>Car Marketplace</h2>
+    <a href="dashboard.html" class="btn">Go to Dashboard</a>
   </header>
 
-  <div id="adsList"></div>
+  <div class="grid" id="adsGrid">Loading marketplace items...</div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCdyIRlXiVEib0zHBtFuhRppHgRgrrBO5E",
@@ -73,65 +87,49 @@
       measurementId: "G-K3H58WH33K"
     };
 
-    // Initialize Firebase Services
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const adsList = document.getElementById('adsList');
-    let ads = [];
-    const currentUser = "Ryan"; // Hardcoded mockup profile placeholder
-
-    // Pull database data from cloud Firestore collection
     async function loadAds() {
-      try {
-        const querySnapshot = await getDocs(collection(db, "carAds"));
-        ads = [];
-        querySnapshot.forEach((doc) => {
-          ads.push({ id: doc.id, ...doc.data() });
-        });
-        renderAds(ads);
-      } catch (error) {
-        console.error("Error loading ads from Firestore: ", error);
-        adsList.innerHTML = `<p style="color: red;">Failed to load items. Verify Firestore permissions.</p>`;
-      }
-    }
-
-    function renderAds(filteredAds) {
-      adsList.innerHTML = "";
+      const adsGrid = document.getElementById("adsGrid");
       
-      if (filteredAds.length === 0) {
-        adsList.innerHTML = "<p>No advertisements found.</p>";
-        return;
-      }
-
-      filteredAds.forEach(ad => {
-        const adDiv = document.createElement('div');
-        adDiv.classList.add('ad-card');
+      try {
+        // Query to get ads sorted by newest submission
+        const adsQuery = query(collection(db, "carAds"), orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(adsQuery);
         
-        // Added fallback checks if property is model vs description
-        adDiv.innerHTML = `
-          <h3>${ad.title || 'Untitled Car'}</h3>
-          ${ad.model ? `<p><strong>Model:</strong> ${ad.model}</p>` : ''}
-          <p><strong>Price:</strong> $${ad.price || 'N/A'}</p>
-          <p>${ad.description || ''}</p>
-          <img src="${ad.image || ''}" alt="Car Image" onerror="this.style.display='none'">
-          <p><em>Uploaded by: ${ad.user || 'Anonymous'}</em></p>
-        `;
-        adsList.appendChild(adDiv);
-      });
+        if (querySnapshot.empty) {
+          adsGrid.innerHTML = "<p>No advertisements active on the market right now.</p>";
+          return;
+        }
+
+        adsGrid.innerHTML = ""; // Clear loader text
+
+        querySnapshot.forEach((doc) => {
+          const ad = doc.data();
+
+          // Construct the card structure safely using template literals
+          const cardHTML = `
+            <div class="card">
+              <img src="${ad.image || 'https://via.placeholder.com/300x200?text=No+Image'}" alt="${ad.title}">
+              <div class="card-content">
+                <h3>${ad.title}</h3>
+                <p class="price">$${Number(ad.price).toLocaleString()}</p>
+                <p>${ad.description}</p>
+                <div class="user-tag">Posted by: ${ad.user}</div>
+              </div>
+            </div>
+          `;
+          adsGrid.innerHTML += cardHTML;
+        });
+
+      } catch (error) {
+        console.error("Error fetching ads: ", error);
+        adsGrid.innerHTML = "<p style='color:ff8888;'>Failed to load ads. Check Firestore console rules configuration.</p>";
+      }
     }
 
-    // Exposed to the global window context so your HTML buttons can click them safely
-    window.showAllAds = function() {
-      renderAds(ads);
-    }
-
-    window.showMyAds = function() {
-      const myAds = ads.filter(ad => ad.user === currentUser);
-      renderAds(myAds);
-    }
-
-    // Bootstrapped trigger loop to automatically run on refresh
+    // Initialize display layout routine automatically on launch
     loadAds();
   </script>
 </body>
