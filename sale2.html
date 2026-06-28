@@ -50,6 +50,12 @@
       background-color: orange;
     }
 
+    button:disabled {
+      background-color: #555;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+
     .nav-btn {
       background-color: #2c5364;
       color: white;
@@ -80,13 +86,13 @@
       <input type="text" id="descInput" placeholder="Description" required>
       <input type="file" id="imageUpload" accept="image/*" required>
       <span class="info-text">* Images are saved securely to Firebase Storage (Max 5MB)</span>
-      <button type="submit">Add Ad</button>
+      <button type="submit" id="submitBtn">Add Ad</button>
     </form>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
@@ -103,14 +109,14 @@
     const db = getFirestore(app);
     const storage = getStorage(app);
 
-    // Post Advertisement Function (Open to everyone)
     window.addAd = async function() {
       const title = document.getElementById("titleInput").value.trim();
       const price = document.getElementById("priceInput").value.trim();
       const desc = document.getElementById("descInput").value.trim();
       const fileInput = document.getElementById("imageUpload");
       const file = fileInput.files[0];
-
+      const submitBtn = document.getElementById("submitBtn");
+      
       if (!title || !price || !desc || !file) {
         alert("Please complete all form fields.");
         return;
@@ -122,21 +128,27 @@
       }
 
       try {
+        // Disable button while uploading so users don't click twice
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Uploading Ad...";
+
         const uniqueFileName = `${Date.now()}_${file.name}`;
         const storageRef = ref(storage, `car_images/${uniqueFileName}`);
 
-        // Upload the file to Firebase Storage
+        // 1. Upload raw image to storage bucket
         const snapshot = await uploadBytes(storageRef, file);
+        
+        // 2. Grab the live web URL link of that image
         const downloadURL = await getDownloadURL(snapshot.ref);
 
-        // Build database entry without requiring an authenticated user session
+        // 3. Save everything to Firestore
         const newAd = {
           title: title,
           price: Number(price),
           description: desc,
           image: downloadURL, 
-          user: "Anonymous User", // Default public label
-          createdAt: new Date()
+          user: "Anonymous User",
+          createdAt: serverTimestamp() // Uses Firebase central time clock
         };
         
         await addDoc(collection(db, "carAds"), newAd);
@@ -147,6 +159,10 @@
       } catch (error) {
         console.error("Upload failed: ", error);
         alert("Upload failed. Make sure your Firebase Storage and Firestore Security Rules are set to public.");
+      } finally {
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Add Ad";
       }
     };
   </script>
