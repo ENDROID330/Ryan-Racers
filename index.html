@@ -5,144 +5,125 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cars Heritage</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      margin:0; padding:0;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-      color:#fff;
-    }
-    header {
-      background:rgba(0,0,0,0.7);
-      padding:20px;
-      text-align:center;
-    }
-    .logo {
-      font-size:2.5em;
-      font-weight:bold;
-      font-family:'Trebuchet MS', sans-serif;
-      color:#ffcc00;
-      text-shadow:2px 2px 8px #000;
-    }
-    nav ul {
-      list-style:none;
-      display:flex;
-      justify-content:center;
-      margin:15px 0 0;
-      padding:0;
-    }
-    nav ul li { margin:0 20px; }
-    nav ul li a { color:#fff; text-decoration:none; font-weight:bold; }
-    .hero {
-      background:url('cool-car-background.jpg') center/cover no-repeat;
-      padding:100px 20px;
-      text-align:center;
-      color:#fff;
-    }
-    .hero h1 { font-size:3em; margin:0; }
-    .section {
-      padding:40px 20px;
-      max-width:1200px;
-      margin:auto;
-    }
-    .cars-grid {
-      display:flex;
-      flex-wrap:wrap;
-      gap:20px;
-      justify-content:center;
-    }
-    .car-card {
-      background:rgba(255,255,255,0.1);
-      border-radius:10px;
-      box-shadow:0 4px 10px rgba(0,0,0,0.5);
-      width:280px;
-      padding:20px;
-      text-align:center;
-    }
-    .car-card img {
-      width:100%;
-      border-radius:8px;
-    }
-    .car-card h2 { margin:15px 0 10px; color:#ffcc00; }
-    footer {
-      background:rgba(0,0,0,0.7);
-      text-align:center;
-      padding:15px;
-      margin-top:40px;
-    }
-    .logo {
-  
- display: block;
+<style>
+  body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+  color: #fff;
+}
+
+header {
+  background: rgba(0,0,0,0.7);
+  padding: 20px;
+  text-align: center;
+}
+
+.logo {
+  font-size: 2.5em;
+  font-weight: bold;
+  font-family: 'Trebuchet MS', sans-serif;
+  color: #ffcc00;
+  text-shadow: 2px 2px 8px #000;
+  display: block;
   margin-left: auto;
   margin-right: auto;
- ali
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  margin: 15px 0 0;
   padding: 0;
 }
 
-/* Container */
-.container {
-  width: 100%;
+nav ul li {
+  margin: 0 20px;
+}
+
+nav ul li a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.hero {
+  background: url('cool-car-background.jpg') center/cover no-repeat;
+  padding: 100px 20px;
+  text-align: center;
+  color: #fff;
+}
+
+.hero h1 {
+  font-size: 3em;
+  margin: 0;
+}
+
+.section {
+  padding: 40px 20px;
   max-width: 1200px;
   margin: auto;
-  padding: 10px;
 }
 
-/* Navigation bar */
-.nav {
+.cars-grid {
   display: flex;
-  justify-content: space-around;
-  background: #000; /* black racing look */
-  color: #fff;
-  padding: 10px;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
 }
 
-/* Cards or ad listings */
-.card {
-  width: 30%;
-  margin: 1%;
-  float: left;
-  background: #f5f5f5;
-  padding: 10px;
-  box-sizing: border-box;
+.car-card {
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  width: 280px;
+  padding: 20px;
+  text-align: center;
 }
 
-/* Images */
-img {
-  max-width: 100%;
-  height: auto;
+.car-card img {
+  width: 100%;
+  border-radius: 8px;
   display: block;
-  align: center;
+  margin: auto;
+}
+
+.car-card h2 {
+  margin: 15px 0 10px;
+  color: #ffcc00;
+}
+
+footer {
+  background: rgba(0,0,0,0.7);
+  text-align: center;
+  padding: 15px;
+  margin-top: 40px;
 }
 
 /* Responsive rules */
 @media (max-width: 1000px) {
   .nav {
-    flex-direction: column;   /* stack menu vertically */
+    flex-direction: column;
     text-align: center;
   }
 
   .card {
-    width: 100%;              /* cards take full width */
+    width: 100%;
     margin-bottom: 20px;
     float: none;
   }
-}
 
-@media (max-width: 1000px) {
   body {
-    font-size: 14px;          /* smaller text for small screens */
+    font-size: 14px;
   }
 
   .nav {
     font-size: 14px;
   }
 }
-}
 
-  </style>
 </head>
 <body>
   <header>
