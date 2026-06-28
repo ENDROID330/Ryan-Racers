@@ -76,7 +76,69 @@
   margin-left: auto;
   margin-right: auto;
  ali
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
 
+/* Container */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: auto;
+  padding: 10px;
+}
+
+/* Navigation bar */
+.nav {
+  display: flex;
+  justify-content: space-around;
+  background: #000; /* black racing look */
+  color: #fff;
+  padding: 10px;
+}
+
+/* Cards or ad listings */
+.card {
+  width: 30%;
+  margin: 1%;
+  float: left;
+  background: #f5f5f5;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Responsive rules */
+@media (max-width: 768px) {
+  .nav {
+    flex-direction: column;   /* stack menu vertically */
+    text-align: center;
+  }
+
+  .card {
+    width: 100%;              /* cards take full width */
+    margin-bottom: 20px;
+    float: none;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;          /* smaller text for small screens */
+  }
+
+  .nav {
+    font-size: 14px;
+  }
+}
 }
 
   </style>
