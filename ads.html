@@ -22,6 +22,19 @@
       color: gold;
       text-shadow: 2px 2px 8px black;
     }
+    button {
+      padding: 10px;
+      margin: 10px;
+      border-radius: 5px;
+      border: none;
+      background-color: gold;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: orange;
+    }
     .ad-card {
       background: rgba(255,255,255,0.1);
       margin: 20px;
@@ -46,59 +59,80 @@
 
   <div id="adsList"></div>
 
-  <script>
-    <script type="module">
-  
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
- 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCdyIRlXiVEib0zHBtFuhRppHgRgrrBO5E",
-    authDomain: "car-market-9e934.firebaseapp.com",
-    projectId: "car-market-9e934",
-    storageBucket: "car-market-9e934.firebasestorage.app",
-    messagingSenderId: "129847588612",
-    appId: "1:129847588612:web:5de1efbfebeac268bd0251",
-    measurementId: "G-K3H58WH33K"
-  };
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
- 
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
-   <script>
-     const adsList = document.getElementById('adsList');
-    const ads = JSON.parse(localStorage.getItem('carAds')) || [];
-    const currentUser = "Ryan"; // Replace with login system
+    const firebaseConfig = {
+      apiKey: "AIzaSyCdyIRlXiVEib0zHBtFuhRppHgRgrrBO5E",
+      authDomain: "car-market-9e934.firebaseapp.com",
+      projectId: "car-market-9e934",
+      storageBucket: "car-market-9e934.firebasestorage.app",
+      messagingSenderId: "129847588612",
+      appId: "1:129847588612:web:5de1efbfebeac268bd0251",
+      measurementId: "G-K3H58WH33K"
+    };
+
+    // Initialize Firebase Services
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const adsList = document.getElementById('adsList');
+    let ads = [];
+    const currentUser = "Ryan"; // Hardcoded mockup profile placeholder
+
+    // Pull database data from cloud Firestore collection
+    async function loadAds() {
+      try {
+        const querySnapshot = await getDocs(collection(db, "carAds"));
+        ads = [];
+        querySnapshot.forEach((doc) => {
+          ads.push({ id: doc.id, ...doc.data() });
+        });
+        renderAds(ads);
+      } catch (error) {
+        console.error("Error loading ads from Firestore: ", error);
+        adsList.innerHTML = `<p style="color: red;">Failed to load items. Verify Firestore permissions.</p>`;
+      }
+    }
 
     function renderAds(filteredAds) {
       adsList.innerHTML = "";
+      
+      if (filteredAds.length === 0) {
+        adsList.innerHTML = "<p>No advertisements found.</p>";
+        return;
+      }
+
       filteredAds.forEach(ad => {
         const adDiv = document.createElement('div');
         adDiv.classList.add('ad-card');
+        
+        // Added fallback checks if property is model vs description
         adDiv.innerHTML = `
-          <h3>${ad.title}</h3>
-          <p><strong>Model:</strong> ${ad.model}</p>
-          <p><strong>Price:</strong> $${ad.price}</p>
-          <p>${ad.description}</p>
-          <img src="${ad.image}" alt="Car Image">
-          <p><em>Uploaded by: ${ad.user}</em></p>
+          <h3>${ad.title || 'Untitled Car'}</h3>
+          ${ad.model ? `<p><strong>Model:</strong> ${ad.model}</p>` : ''}
+          <p><strong>Price:</strong> $${ad.price || 'N/A'}</p>
+          <p>${ad.description || ''}</p>
+          <img src="${ad.image || ''}" alt="Car Image" onerror="this.style.display='none'">
+          <p><em>Uploaded by: ${ad.user || 'Anonymous'}</em></p>
         `;
         adsList.appendChild(adDiv);
       });
     }
 
-    function showAllAds() {
+    // Exposed to the global window context so your HTML buttons can click them safely
+    window.showAllAds = function() {
       renderAds(ads);
     }
 
-    function showMyAds() {
+    window.showMyAds = function() {
       const myAds = ads.filter(ad => ad.user === currentUser);
       renderAds(myAds);
     }
 
-    // Default: show all ads
-    showAllAds();
+    // Bootstrapped trigger loop to automatically run on refresh
+    loadAds();
   </script>
 </body>
 </html>
