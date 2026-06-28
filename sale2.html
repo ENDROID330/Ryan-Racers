@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Car Ads - Dashboard</title>
+  <title>Car Ads - Dashboard (Public)</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -56,8 +56,8 @@
       border: 1px solid gold;
     }
 
-    .warning-text {
-      color: #ffdddd;
+    .info-text {
+      color: #ddffdd;
       font-size: 12px;
       display: block;
       margin-top: -5px;
@@ -70,25 +70,25 @@
   <header>
     <h2>Car Ads Management</h2>
     <button class="nav-btn" onclick="window.location.href='ads.html'">Go to Marketplace (ads.html)</button>
-    <button id="logoutBtn">Logout</button>
   </header>
 
   <div class="container">
     <h3>Post a New Advertisement</h3>
-    <input type="text" id="titleInput" placeholder="Car Title" required>
-    <input type="number" id="priceInput" placeholder="Price" required>
-    <input type="text" id="descInput" placeholder="Description" required>
-    <input type="file" id="imageUpload" accept="image/*" required>
-    <span class="warning-text">* Please use images under 500KB (Firestore string limit)</span>
-    <button onclick="addAd()">Add Ad</button>
+    <form id="adForm" onsubmit="event.preventDefault(); addAd();">
+      <input type="text" id="titleInput" placeholder="Car Title" required>
+      <input type="number" id="priceInput" placeholder="Price" required>
+      <input type="text" id="descInput" placeholder="Description" required>
+      <input type="file" id="imageUpload" accept="image/*" required>
+      <span class="info-text">* Images are saved securely to Firebase Storage (Max 5MB)</span>
+      <button type="submit">Add Ad</button>
+    </form>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCdyIRlXiVEib0zHBtFuhRppHgRgrrBO5E",
       authDomain: "car-market-9e934.firebaseapp.com",
@@ -101,21 +101,9 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth(app);
+    const storage = getStorage(app);
 
-    let currentUser = null;
-
-    // Secure the Route: Redirect unauthenticated users immediately
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        currentUser = user.email || user.uid;
-      } else {
-        alert("Please login to access the dashboard.");
-        window.location.href = "login.html"; // <-- Change this to your login file (e.g., index.html)
-      }
-    });
-
-    // Post Advertisement
+    // Post Advertisement Function (Open to everyone)
     window.addAd = async function() {
       const title = document.getElementById("titleInput").value.trim();
       const price = document.getElementById("priceInput").value.trim();
@@ -124,56 +112,43 @@
       const file = fileInput.files[0];
 
       if (!title || !price || !desc || !file) {
-        alert("Please fill all fields and upload an image.");
+        alert("Please complete all form fields.");
         return;
       }
 
-      if (file.size > 512000) { 
-        alert("Image is too large! Please choose an image smaller than 500KB.");
+      if (file.size > 5 * 1024 * 1024) { 
+        alert("Image is too large! Please choose an image smaller than 5MB.");
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = async function(e) {
-        try {
-          const newAd = {
-            title: title,
-            price: Number(price), // Converted to Number for logical sorting capabilities later
-            description: desc,
-            image: e.target.result, 
-            user: currentUser,
-            createdAt: new Date() // Useful for sorting items from newest to oldest
-          };
-          
-          await addDoc(collection(db, "carAds"), newAd);
-          
-          // Clear inputs safely
-          document.getElementById("titleInput").value = "";
-          document.getElementById("priceInput").value = "";
-          document.getElementById("descInput").value = "";
-          fileInput.value = "";
-          
-          alert("Ad posted successfully! View it on the Ads page.");
-        } catch (error) {
-          console.error("Error writing to Firestore: ", error);
-          alert("Failed to save ad. Check your Firestore rules permissions.");
-        }
-      };
-      
-      reader.readAsDataURL(file);
+      try {
+        const uniqueFileName = `${Date.now()}_${file.name}`;
+        const storageRef = ref(storage, `car_images/${uniqueFileName}`);
+
+        // Upload the file to Firebase Storage
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+
+        // Build database entry without requiring an authenticated user session
+        const newAd = {
+          title: title,
+          price: Number(price),
+          description: desc,
+          image: downloadURL, 
+          user: "Anonymous User", // Default public label
+          createdAt: new Date()
+        };
+        
+        await addDoc(collection(db, "carAds"), newAd);
+        
+        document.getElementById("adForm").reset();
+        alert("Ad posted successfully to the marketplace!");
+        
+      } catch (error) {
+        console.error("Upload failed: ", error);
+        alert("Upload failed. Make sure your Firebase Storage and Firestore Security Rules are set to public.");
+      }
     };
-
-    // Logout handling with route redirection
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      signOut(auth)
-        .then(() => {
-          alert("Logged out successfully!");
-          window.location.href = "login.html"; // <-- Redirect route on sign out
-        })
-        .catch((error) => {
-          console.error("Logout issue: ", error);
-        });
-    });
   </script>
 </body>
 </html>
