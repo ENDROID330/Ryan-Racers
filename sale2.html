@@ -73,6 +73,7 @@
   </style>
 </head>
 <body>
+
   <header>
     <h2>Car Ads</h2>
     <button onclick="showAllAds()">All Ads</button>
@@ -80,7 +81,6 @@
     <button id="logoutBtn">Logout</button>
   </header>
 
-  <!-- Upload form -->
   <div class="container">
     <input type="text" id="titleInput" placeholder="Car Title">
     <input type="number" id="priceInput" placeholder="Price">
@@ -92,37 +92,59 @@
   <div id="adsList"></div>
 
   <script type="module">
-  // --- Firebase Setup ---
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
+    // 1. Corrected Firebase Imports (using stable v10 SDKs)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCdyIRlXiVEib0zHBtFuhRppHgRgrrBO5E",
-    authDomain: "car-market-9e934.firebaseapp.com",
-    projectId: "car-market-9e934",
-    storageBucket: "car-market-9e934.firebasestorage.app",
-    messagingSenderId: "129847588612",
-    appId: "1:129847588612:web:5de1efbfebeac268bd0251",
-    measurementId: "G-K3H58WH33K"
-  };
+    // 2. Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCdyIRlXiVEib0zHBtFuhRppHgRgrrBO5E",
+      authDomain: "car-market-9e934.firebaseapp.com",
+      projectId: "car-market-9e934",
+      storageBucket: "car-market-9e934.firebasestorage.app",
+      messagingSenderId: "129847588612",
+      appId: "1:129847588612:web:5de1efbfebeac268bd0251",
+      measurementId: "G-K3H58WH33K"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  </script>
+    // 3. Initialize Firebase Services
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-  <script>
     // --- Ads Logic ---
     const adsList = document.getElementById('adsList');
-    let ads = JSON.parse(localStorage.getItem('carAds')) || [];
-    let currentUser = localStorage.getItem("currentUser") || "Guest";
+    let ads = []; 
+    let currentUser = "Guest";
 
-    function saveAds() {
-      localStorage.setItem('carAds', JSON.stringify(ads));
+    // Track active user status from Firebase Authentication
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user.email || user.uid;
+      } else {
+        currentUser = "Guest";
+      }
+      loadAds(); // Pull fresh data from cloud whenever auth state shifts
+    });
+
+    // Fetch database items asynchronously
+    async function loadAds() {
+      try {
+        const querySnapshot = await getDocs(collection(db, "carAds"));
+        ads = [];
+        querySnapshot.forEach((doc) => {
+          ads.push({ id: doc.id, ...doc.data() });
+        });
+        renderAds(ads);
+      } catch (error) {
+        console.error("Error loading ads from Firestore: ", error);
+      }
     }
 
     function renderAds(filteredAds) {
       adsList.innerHTML = "";
-      filteredAds.forEach((ad, index) => {
+      filteredAds.forEach((ad) => {
         const adDiv = document.createElement('div');
         adDiv.classList.add('ad-card');
         adDiv.innerHTML = `
@@ -133,14 +155,15 @@
           <small>Uploaded by: ${ad.user}</small>
         `;
 
-        if (ad.user === currentUser) {
+        // Check if current user owns this ad
+        if (ad.user === currentUser && currentUser !== "Guest") {
           const editBtn = document.createElement('button');
           editBtn.textContent = "Edit";
-          editBtn.onclick = () => editAd(index);
+          editBtn.onclick = () => editAd(ad.id, ad);
 
           const deleteBtn = document.createElement('button');
           deleteBtn.textContent = "Delete";
-          deleteBtn.onclick = () => deleteAd(index);
+          deleteBtn.onclick = () => deleteAd(ad.id);
 
           adDiv.appendChild(editBtn);
           adDiv.appendChild(deleteBtn);
@@ -150,16 +173,17 @@
       });
     }
 
-    function showAllAds() {
+    // Bind local functions to window context so HTML element clicks can reach them
+    window.showAllAds = function() {
       renderAds(ads);
     }
 
-    function showMyAds() {
+    window.showMyAds = function() {
       const myAds = ads.filter(ad => ad.user === currentUser);
       renderAds(myAds);
     }
 
-    function addAd() {
+    window.addAd = async function() {
       const title = document.getElementById("titleInput").value;
       const price = document.getElementById("priceInput").value;
       const desc = document.getElementById("descInput").value;
@@ -168,17 +192,28 @@
 
       if (title && price && desc && file) {
         const reader = new FileReader();
-        reader.onload = function(e) {
-          const newAd = {
-            title: title,
-            price: price,
-            description: desc,
-            image: e.target.result, // Base64 image string
-            user: currentUser
-          };
-          ads.push(newAd);
-          saveAds();
-          showAllAds();
+        reader.onload = async function(e) {
+          try {
+            const newAd = {
+              title: title,
+              price: price,
+              description: desc,
+              image: e.target.result, 
+              user: currentUser
+            };
+            
+            await addDoc(collection(db, "carAds"), newAd);
+            
+            // Clear inputs upon success
+            document.getElementById("titleInput").value = "";
+            document.getElementById("priceInput").value = "";
+            document.getElementById("descInput").value = "";
+            document.getElementById("imageUpload").value = "";
+            
+            loadAds(); 
+          } catch (error) {
+            console.error("Error writing to Firestore: ", error);
+          }
         };
         reader.readAsDataURL(file);
       } else {
@@ -186,45 +221,45 @@
       }
     }
 
-    function editAd(index) {
-      const ad = ads[index];
-      const newTitle = prompt("Edit title:", ad.title);
-      const newPrice = prompt("Edit price:", ad.price);
-      const newDesc = prompt("Edit description:", ad.description);
+    window.editAd = async function(id, currentData) {
+      const newTitle = prompt("Edit title:", currentData.title) || currentData.title;
+      const newPrice = prompt("Edit price:", currentData.price) || currentData.price;
+      const newDesc = prompt("Edit description:", currentData.description) || currentData.description;
 
-      if (newTitle) ad.title = newTitle;
-      if (newPrice) ad.price = newPrice;
-      if (newDesc) ad.description = newDesc;
-
-      saveAds();
-      showAllAds();
-    }
-
-    function deleteAd(index) {
-      if (confirm("Are you sure you want to delete this ad?")) {
-        ads.splice(index, 1);
-        saveAds();
-        showAllAds();
+      try {
+        const docRef = doc(db, "carAds", id);
+        await updateDoc(docRef, {
+          title: newTitle,
+          price: newPrice,
+          description: newDesc
+        });
+        loadAds();
+      } catch (error) {
+        console.error("Error modifying document: ", error);
       }
     }
 
-    // --- Firebase Auth State ---
-    // (Make sure you import getAuth, onAuthStateChanged, signOut if you want this part working)
-    // Example:
-    // import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
-    // const auth = getAuth(app);
+    window.deleteAd = async function(id) {
+      if (confirm("Are you sure you want to delete this ad?")) {
+        try {
+          await deleteDoc(doc(db, "carAds", id));
+          loadAds();
+        } catch (error) {
+          console.error("Error eliminating document: ", error);
+        }
+      }
+    }
 
-    // --- Logout ---
+    // --- Logout Action ---
     document.getElementById("logoutBtn").addEventListener("click", () => {
-      // signOut(auth).then(() => {
-      localStorage.removeItem("currentUser");
-      currentUser = "Guest";
-      showAllAds();
-      console.log("Signed out");
-      // });
+      signOut(auth).then(() => {
+        console.log("Signed out from Firebase.");
+        localStorage.removeItem("currentUser"); // Clean old residue if lingering
+      }).catch((error) => {
+        console.error("Logout issue: ", error);
+      });
     });
 
-    showAllAds();
   </script>
 </body>
 </html>
