@@ -80,20 +80,22 @@
     <button id="logoutBtn">Logout</button>
   </header>
 
+  <!-- Upload form -->
+  <div class="container">
+    <input type="text" id="titleInput" placeholder="Car Title">
+    <input type="number" id="priceInput" placeholder="Price">
+    <input type="text" id="descInput" placeholder="Description">
+    <input type="file" id="imageUpload" accept="image/*">
+    <button onclick="addAd()">Add Ad</button>
+  </div>
+
   <div id="adsList"></div>
 
   <script type="module">
-    
   // --- Firebase Setup ---
-    <script type="module">
-  // Import the functions you need from the SDKs you need
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
   const firebaseConfig = {
     apiKey: "AIzaSyCdyIRlXiVEib0zHBtFuhRppHgRgrrBO5E",
     authDomain: "car-market-9e934.firebaseapp.com",
@@ -104,11 +106,11 @@
     measurementId: "G-K3H58WH33K"
   };
 
-  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
-</script>
+  </script>
 
+  <script>
     // --- Ads Logic ---
     const adsList = document.getElementById('adsList');
     let ads = JSON.parse(localStorage.getItem('carAds')) || [];
@@ -131,7 +133,6 @@
           <small>Uploaded by: ${ad.user}</small>
         `;
 
-        // Show edit/delete only if current user is uploader
         if (ad.user === currentUser) {
           const editBtn = document.createElement('button');
           editBtn.textContent = "Edit";
@@ -158,6 +159,33 @@
       renderAds(myAds);
     }
 
+    function addAd() {
+      const title = document.getElementById("titleInput").value;
+      const price = document.getElementById("priceInput").value;
+      const desc = document.getElementById("descInput").value;
+      const fileInput = document.getElementById("imageUpload");
+      const file = fileInput.files[0];
+
+      if (title && price && desc && file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const newAd = {
+            title: title,
+            price: price,
+            description: desc,
+            image: e.target.result, // Base64 image string
+            user: currentUser
+          };
+          ads.push(newAd);
+          saveAds();
+          showAllAds();
+        };
+        reader.readAsDataURL(file);
+      } else {
+        alert("Please fill all fields and upload an image.");
+      }
+    }
+
     function editAd(index) {
       const ad = ads[index];
       const newTitle = prompt("Edit title:", ad.title);
@@ -181,30 +209,21 @@
     }
 
     // --- Firebase Auth State ---
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        currentUser = user.displayName || user.email;
-        localStorage.setItem("currentUser", currentUser);
-        console.log("Logged in as:", currentUser);
-      } else {
-        currentUser = "Guest";
-        localStorage.removeItem("currentUser");
-        console.log("No user logged in");
-      }
-      showAllAds(); // refresh ads with correct user
-    });
+    // (Make sure you import getAuth, onAuthStateChanged, signOut if you want this part working)
+    // Example:
+    // import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
+    // const auth = getAuth(app);
 
     // --- Logout ---
     document.getElementById("logoutBtn").addEventListener("click", () => {
-      signOut(auth).then(() => {
-        localStorage.removeItem("currentUser");
-        currentUser = "Guest";
-        showAllAds();
-        console.log("Signed out");
-      });
+      // signOut(auth).then(() => {
+      localStorage.removeItem("currentUser");
+      currentUser = "Guest";
+      showAllAds();
+      console.log("Signed out");
+      // });
     });
 
-    // Default: show all ads
     showAllAds();
   </script>
 </body>
