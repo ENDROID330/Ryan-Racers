@@ -70,6 +70,14 @@
       margin-top: 8px;
       color: lightyellow;
     }
+    
+    .warning-text {
+      color: #ffdddd;
+      font-size: 12px;
+      display: block;
+      margin-top: -5px;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
@@ -86,6 +94,7 @@
     <input type="number" id="priceInput" placeholder="Price">
     <input type="text" id="descInput" placeholder="Description">
     <input type="file" id="imageUpload" accept="image/*">
+    <span class="warning-text">* Please use images under 500KB (Firestore string limit)</span>
     <button onclick="addAd()">Add Ad</button>
   </div>
 
@@ -144,6 +153,11 @@
 
     function renderAds(filteredAds) {
       adsList.innerHTML = "";
+      if (filteredAds.length === 0) {
+        adsList.innerHTML = "<p>No advertisements found.</p>";
+        return;
+      }
+
       filteredAds.forEach((ad) => {
         const adDiv = document.createElement('div');
         adDiv.classList.add('ad-card');
@@ -151,7 +165,7 @@
           <h3>${ad.title}</h3>
           <p><strong>Price:</strong> $${ad.price}</p>
           <p>${ad.description}</p>
-          <img src="${ad.image}" alt="Car Image">
+          <img src="${ad.image || ''}" alt="Car Image" onerror="this.style.display='none'">
           <small>Uploaded by: ${ad.user}</small>
         `;
 
@@ -191,6 +205,12 @@
       const file = fileInput.files[0];
 
       if (title && price && desc && file) {
+        // Enforce basic client-side check for image size restriction
+        if (file.size > 512000) { 
+          alert("Image is too large! Please choose an image smaller than 500KB.");
+          return;
+        }
+
         const reader = new FileReader();
         reader.onload = async function(e) {
           try {
@@ -213,6 +233,7 @@
             loadAds(); 
           } catch (error) {
             console.error("Error writing to Firestore: ", error);
+            alert("Failed to save ad. Check browser console logs for security rule or size configuration bugs.");
           }
         };
         reader.readAsDataURL(file);
@@ -254,11 +275,14 @@
     document.getElementById("logoutBtn").addEventListener("click", () => {
       signOut(auth).then(() => {
         console.log("Signed out from Firebase.");
-        localStorage.removeItem("currentUser"); // Clean old residue if lingering
+        localStorage.removeItem("currentUser");
       }).catch((error) => {
         console.error("Logout issue: ", error);
       });
     });
+
+    // Explicit fallback execution loop to load data immediately on script completion
+    loadAds();
 
   </script>
 </body>
